@@ -67,7 +67,7 @@ export class AccountsService {
     }
     return this.stravaAPI.athlete.get({
       athlete_id: athleteId,
-      access_token: `Bearer ${account.accessToken}`,
+      access_token: `Bearer ${athleteAccount.accessToken}`,
     });
   }
 }
