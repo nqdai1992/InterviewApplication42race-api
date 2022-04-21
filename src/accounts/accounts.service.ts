@@ -52,7 +52,7 @@ export class AccountsService {
       athleteAccounts.map((account) => {
         return this.stravaAPI.athlete.get({
           athlete_id: account.athleteId,
-          access_token: account.accessToken,
+          access_token: `Bearer ${account.accessToken}`,
         });
       }),
     );
@@ -67,7 +67,7 @@ export class AccountsService {
     }
     return this.stravaAPI.athlete.get({
       athlete_id: athleteId,
-      access_token: athleteAccount.accessToken,
+      access_token: `Bearer ${account.accessToken}`,
     });
   }
 }
