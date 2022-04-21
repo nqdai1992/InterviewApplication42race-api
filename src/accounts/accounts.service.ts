@@ -49,11 +49,17 @@ export class AccountsService {
   async getAccounts() {
     const athleteAccounts = await this.athleteModel.find();
     const athletes = await Promise.all(
-      athleteAccounts.map((account) => {
-        return this.stravaAPI.athlete.get({
-          athlete_id: account.athleteId,
-          access_token: `Bearer ${account.accessToken}`,
-        });
+      athleteAccounts.map(async (account) => {
+        try {
+          return await this.stravaAPI.athlete.get({
+            athlete_id: account.athleteId,
+            access_token: `Bearer ${account.accessToken}`,
+          });
+        } catch (error) {
+          return {
+            athleteId: account.athleteId,
+          };
+        }
       }),
     );
 
@@ -65,9 +71,15 @@ export class AccountsService {
     if (!athleteAccount) {
       throw new NotFoundException('Athlete is not found');
     }
-    return this.stravaAPI.athlete.get({
-      athlete_id: athleteId,
-      access_token: `Bearer ${athleteAccount.accessToken}`,
-    });
+    try {
+      return this.stravaAPI.athlete.get({
+        athlete_id: athleteId,
+        access_token: `Bearer ${athleteAccount.accessToken}`,
+      });
+    } catch (error) {
+      return {
+        athleteId: athleteAccount.athleteId,
+      };
+    }
   }
 }
