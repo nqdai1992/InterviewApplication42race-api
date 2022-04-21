@@ -1,19 +1,16 @@
-import { Controller, Get, Headers, Param } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
 
 @Controller('accounts')
 export class AccountsController {
   constructor(private accountService: AccountsService) {}
   @Get()
-  async getAccounts(@Headers('accessToken') accessToken: string) {
-    return this.accountService.getAccounts(accessToken);
+  async getAccounts() {
+    return this.accountService.getAccounts();
   }
 
   @Get(':athleteId')
-  async getAccount(
-    @Headers('accessToken') accessToken: string,
-    @Param('athleteId') athleteId: string,
-  ) {
-    return this.accountService.getAccount(accessToken, athleteId);
+  async getAccount(@Param('athleteId') athleteId: string) {
+    return this.accountService.getAccount(athleteId);
   }
 }

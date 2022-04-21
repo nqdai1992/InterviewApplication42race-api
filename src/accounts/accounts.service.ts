@@ -7,6 +7,7 @@ import {
   AthleteAccountDocument,
 } from './schemas/athlete.schema';
 import * as strava from 'strava-v3';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AccountsService {
@@ -14,6 +15,7 @@ export class AccountsService {
   constructor(
     @InjectModel(AthleteAccount.name)
     private athleteModel: Model<AthleteAccountDocument>,
+    private config: ConfigService,
   ) {}
   async createIfNotExist(createAccountDto: CreateAccountDto) {
     const existedAccount = await this.athleteModel.findOne({
@@ -44,13 +46,13 @@ export class AccountsService {
     );
   }
 
-  async getAccounts(accessToken: string) {
+  async getAccounts() {
     const athleteAccounts = await this.athleteModel.find();
     const athletes = await Promise.all(
       athleteAccounts.map((account) => {
         return this.stravaAPI.athlete.get({
           athlete_id: account.athleteId,
-          access_token: accessToken,
+          access_token: account.accessToken,
         });
       }),
     );
@@ -58,14 +60,14 @@ export class AccountsService {
     return athletes;
   }
 
-  async getAccount(accessToken: string, athleteId) {
+  async getAccount(athleteId) {
     const athleteAccount = await this.athleteModel.findOne({ athleteId });
     if (!athleteAccount) {
       throw new NotFoundException('Athlete is not found');
     }
     return this.stravaAPI.athlete.get({
       athlete_id: athleteId,
-      access_token: accessToken,
+      access_token: athleteAccount.accessToken,
     });
   }
 }
