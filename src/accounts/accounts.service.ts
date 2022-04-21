@@ -50,13 +50,30 @@ export class AccountsService {
     const athleteAccounts = await this.athleteModel.find();
     const athletes = await Promise.all(
       athleteAccounts.map(async (account) => {
+        let token = account.accessToken;
+
         if (Date.now() >= Number(account.tokenExpiresAt) * 1000) {
-          await this.stravaAPI.oauth.refreshToken(account.refreshToken);
+          const res = await this.stravaAPI.oauth.refreshToken(
+            account.refreshToken,
+          );
+
+          this.athleteModel.updateOne(
+            { athleteId: account.athleteId },
+            {
+              accessToken: res.access_token,
+              refresh_token: res.refresh_token,
+              tokenExpiresAt: res.expires_at,
+            },
+          );
+
+          token = res.access_token;
         }
+
+        console.log(token);
 
         return this.stravaAPI.athlete.get({
           athlete_id: account.athleteId,
-          access_token: `Bearer ${account.accessToken}`,
+          access_token: token,
         });
       }),
     );
@@ -66,17 +83,32 @@ export class AccountsService {
 
   async getAccount(athleteId) {
     const athleteAccount = await this.athleteModel.findOne({ athleteId });
+    let token = athleteAccount.accessToken;
+
     if (!athleteAccount) {
       throw new NotFoundException('Athlete is not found');
     }
 
     if (Date.now() >= Number(athleteAccount.tokenExpiresAt) * 1000) {
-      await this.stravaAPI.oauth.refreshToken(athleteAccount.refreshToken);
+      const res = await this.stravaAPI.oauth.refreshToken(
+        athleteAccount.refreshToken,
+      );
+
+      this.athleteModel.updateOne(
+        { athleteId },
+        {
+          accessToken: res.access_token,
+          refresh_token: res.refresh_token,
+          tokenExpiresAt: res.expires_at,
+        },
+      );
+
+      token = res.access_token;
     }
 
     return this.stravaAPI.athlete.get({
       athlete_id: athleteId,
-      access_token: `Bearer ${athleteAccount.accessToken}`,
+      access_token: token,
     });
   }
 }
